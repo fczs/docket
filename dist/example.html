@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Docket</title>
+    <style>
+        .heading {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            background-color: #4499dd;
+            color: #fff;
+            position: relative;
+            display: inline-block
+        }
+
+        p {
+            font-size: 18px;
+            line-height: 1.4;
+            margin-bottom: 40px;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+<div class="heading" id="heading" data-count="2">IT-Grad has announced its ICO</div>
+<script src="docket.min.js"></script>
+<script>
+    var docket = new Docket({
+        target: '#heading'
+    });
+
+    //console.log(docket._writeCookie('name', 'vasya', {path: '/', expires: 3600}))
+</script>
+</body>
+</html>

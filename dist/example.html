@@ -13,13 +13,6 @@
             position: relative;
             display: inline-block
         }
-
-        p {
-            font-size: 18px;
-            line-height: 1.4;
-            margin-bottom: 40px;
-            margin-top: 40px;
-        }
     </style>
 </head>
 <body>
@@ -27,10 +20,10 @@
 <script src="docket.min.js"></script>
 <script>
     var docket = new Docket({
-        target: '#heading'
+        target: '#news',
+        position: 'right-bottom',
+        condition: '/docket/target/'
     });
-
-    //console.log(docket._writeCookie('name', 'vasya', {path: '/', expires: 3600}))
 </script>
 </body>
 </html>

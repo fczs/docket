@@ -7,6 +7,7 @@
      */
     Docket.defaults = {
         position: 'right-top',
+        margin: [0, 0],
         expires: 0
     };
 
@@ -20,8 +21,8 @@
 
         if (!(this instanceof Docket)) {
             return new Docket(options);
-        } else if (!options.target) {
-            throw new Error('You must specify the target element');
+        } else if (!options.parent) {
+            throw new Error('You must specify the parent element');
         }
 
         /**
@@ -36,7 +37,7 @@
          * @type {Element}
          * @private
          */
-        this._target = null;
+        this._parent = null;
 
         /**
          * Posts timestamps.
@@ -57,6 +58,13 @@
         this._position = '';
 
         /**
+         * Docket margins (X, Y) relative to the parent element.
+         * @type {Array}
+         * @private
+         */
+        this._margin = [];
+
+        /**
          * Date/time the cookie expires in seconds.
          * @type {Number}
          * @private
@@ -68,7 +76,14 @@
          * @type {String}
          * @private
          */
-        this._condition = '';
+        this._targetPage = '';
+
+        /**
+         * The conditional element for the Docket deduction.
+         * @type {Element}
+         * @private
+         */
+        this._targetItem = null;
 
         /**
          * Current date.
@@ -100,11 +115,15 @@
      * @private
      */
     Docket.prototype.init = function (options) {
-        this._target = document.querySelector(options.target);
-        this._posts = this.getPosts(this._target.getAttribute('data-posts'));
+        this._parent = document.querySelector(options.parent);
+        this._posts = this.getPosts(this._parent.getAttribute('data-timestamp'));
         this._position = options.position || Docket.defaults.position;
+        this._margin = options.margin || Docket.defaults.margin;
         this._expires = parseInt(options.expires) || Docket.defaults.expires;
-        this._condition = this.trimSlashes(options.condition.trim());
+        if (options.targetPage)
+            this._targetPage = this.trimSlashes(options.targetPage.trim());
+        if (options.targetItem)
+            this._targetItem = document.querySelector(options.targetItem);
         if (this._posts)
             this.checkConditions();
     };
@@ -119,8 +138,12 @@
         if (count > 0)
             this.createStyles().pinDocket(count);
 
-        if (this._condition === this.trimSlashes(this.getLocation()))
-            this.setHistory().unpinDocket();
+        if (this._targetPage !== '') {
+            if (this._targetPage === this.trimSlashes(this.getLocation()))
+                this.setHistory().unpinDocket();
+        } else if (this._targetItem) {
+            //
+        }
     };
 
     /**
@@ -143,7 +166,7 @@
     };
 
     /**
-     * Gets the current URL without host and query params.
+     * Gets the current URL with trimmed host and query params.
      * @return {String}
      * @private
      */
@@ -183,7 +206,10 @@
      * @private
      */
     Docket.prototype.createStyles = function () {
-        var styles = document.createElement('style');
+        var styles = document.createElement('style'),
+            position = this._position.split('-');
+
+        this._styles += '.docket-pin.' + this._position + '{' + position[0] + ':-' + this._margin[0] + 'px;' + position[1] + ':-' + this._margin[1] + 'px}';
         styles.setAttribute('id', 'docket-styles');
         styles.innerHTML = this._styles;
         document.body.appendChild(styles);
@@ -200,23 +226,8 @@
         this._docket = document.createElement('div');
         this._docket.setAttribute('class', 'docket-pin ' + this._position);
         this._docket.innerHTML = count;
-        this._target.style.position = 'relative';
-        this._target.appendChild(this._docket);
-        return this;
-    };
-
-    /**
-     * @return {Docket}
-     * @private
-     */
-    Docket.prototype.unpinDocket = function () {
-        if (this._docket !== null) {
-            this.documentReady(function () {
-                setTimeout(function () {
-                    this._docket.classList.add('docket-unpin');
-                }.bind(this), 500);
-            }.bind(this));
-        }
+        this._parent.style.position = 'relative';
+        this._parent.appendChild(this._docket);
         return this;
     };
 
@@ -262,14 +273,6 @@
     };
 
     /**
-     * @param {String} name
-     * @private
-     */
-    Docket.prototype.deleteCookie = function (name) {
-        this.writeCookie(name, '', {path: '/', expires: -1});
-    };
-
-    /**
      * Counts the unseen items that will be displayed in the Docket.
      * @return {Number}
      * @private
@@ -298,6 +301,30 @@
             expires: this._expires
         });
         return this;
+    };
+
+    /**
+     * Removes the Docket from the screen.
+     * @return {Docket}
+     * @public
+     */
+    Docket.prototype.unpinDocket = function () {
+        if (this._docket !== null) {
+            this.documentReady(function () {
+                setTimeout(function () {
+                    this._docket.classList.add('docket-unpin');
+                }.bind(this), 500);
+            }.bind(this));
+        }
+        return this;
+    };
+
+    /**
+     * Removes the Docket cookie.
+     * @public
+     */
+    Docket.prototype.deleteCookie = function () {
+        this.writeCookie(this._cookieName, '', {path: '/', expires: -1});
     };
 
     /**
